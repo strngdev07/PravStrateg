@@ -1,9 +1,26 @@
 import type { NextConfig } from "next";
 
+const isDev = process.env.NODE_ENV === "development";
+
+/**
+ * Источники скриптов. Своя статика плюс Яндекс.Метрика — она грузится
+ * только после согласия в cookie-баннере (политика ПД, п. 9.2).
+ *
+ * 'unsafe-eval' добавляется ТОЛЬКО в режиме разработки: React использует
+ * eval() для отладки (восстановление стека вызовов, обновление без
+ * перезагрузки). В production React eval() не применяет, и разрешать его
+ * там нельзя — это снимает существенную часть защиты от XSS.
+ */
+const scriptSrc = [
+  "'self'",
+  "'unsafe-inline'",
+  ...(isDev ? ["'unsafe-eval'"] : []),
+  "https://mc.yandex.ru",
+  "https://yastatic.net",
+].join(" ");
+
 /**
  * Security headers — CLAUDE.md §17.
- * CSP собран под текущий состав сайта: своя статика, Яндекс.Метрика
- * (грузится только после согласия в cookie-баннере, см. политику ПД п. 9.2).
  */
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
@@ -14,15 +31,21 @@ const securityHeaders = [
     key: "Permissions-Policy",
     value: "camera=(), microphone=(), geolocation=(), payment=()",
   },
-  {
-    key: "Strict-Transport-Security",
-    value: "max-age=63072000; includeSubDomains; preload",
-  },
+  // Только для боевого сайта: на localhost принуждение к HTTPS
+  // ломает локальную разработку и ничего не защищает.
+  ...(isDev
+    ? []
+    : [
+        {
+          key: "Strict-Transport-Security",
+          value: "max-age=63072000; includeSubDomains; preload",
+        },
+      ]),
   {
     key: "Content-Security-Policy",
     value: [
       "default-src 'self'",
-      "script-src 'self' 'unsafe-inline' https://mc.yandex.ru https://yastatic.net",
+      `script-src ${scriptSrc}`,
       "style-src 'self' 'unsafe-inline'",
       "img-src 'self' data: blob: https://mc.yandex.ru https://mc.yandex.com",
       "font-src 'self' data:",
@@ -32,7 +55,7 @@ const securityHeaders = [
       "base-uri 'self'",
       "form-action 'self'",
       "frame-ancestors 'self'",
-      "upgrade-insecure-requests",
+      ...(isDev ? [] : ["upgrade-insecure-requests"]),
     ].join("; "),
   },
 ];

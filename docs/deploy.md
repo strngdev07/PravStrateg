@@ -120,9 +120,18 @@ sudo systemctl status pravstrateg
 `/etc/nginx/sites-available/pravstrateg`:
 
 ```nginx
+# www → основной домен. Canonical на страницах указывает на адрес без www,
+# поэтому обслуживать сайт на обоих именах нельзя: получится дублирование
+# для поисковиков и расхождение в статистике Метрики.
 server {
     listen 80;
-    server_name pravstrateg.ru www.pravstrateg.ru;
+    server_name www.pravstrateg.ru;
+    return 301 https://pravstrateg.ru$request_uri;
+}
+
+server {
+    listen 80;
+    server_name pravstrateg.ru;
 
     # Заявки с вложениями — до 10 МБ плюс запас на служебные поля
     client_max_body_size 12M;
