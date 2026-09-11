@@ -1,0 +1,135 @@
+@import "tailwindcss";
+
+/*
+ * Дизайн-токены «ПравСтратег» — CLAUDE.md §2.
+ * Светлый, премиальный, минималистичный, спокойный.
+ * Фон: белый / молочный / светло-серый. Текст: графитовый.
+ * Акценты: глубокий синий и серо-синий. Без золота и градиентов.
+ */
+@theme {
+  /* Поверхности */
+  --color-bg: #ffffff;
+  --color-bg-soft: #faf9f6;
+  --color-bg-muted: #f1f2f4;
+  --color-bg-deep: #16202e;
+
+  /* Текст */
+  --color-ink: #171a1f;
+  --color-ink-soft: #464c56;
+  --color-ink-muted: #767d89;
+  --color-ink-invert: #f7f8f9;
+
+  /* Линии */
+  --color-line: #e3e5e9;
+  --color-line-strong: #ccd0d6;
+
+  /* Акценты */
+  --color-accent: #1f3a5f;
+  --color-accent-hover: #2b4d7a;
+  --color-accent-soft: #63809f;
+  --color-accent-wash: #eef1f5;
+
+  /* Служебные */
+  --color-danger: #9a2f2f;
+  --color-success: #1f5f43;
+
+  /* Шрифты */
+  --font-sans: var(--font-manrope), ui-sans-serif, system-ui, -apple-system,
+    "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: var(--font-lora), Georgia, "Times New Roman", serif;
+
+  /* Ритм */
+  --spacing-section: 5.5rem;
+  --radius-card: 4px;
+}
+
+@layer base {
+  html {
+    -webkit-text-size-adjust: 100%;
+    scroll-behavior: smooth;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    html {
+      scroll-behavior: auto;
+    }
+    *,
+    *::before,
+    *::after {
+      animation-duration: 0.01ms !important;
+      transition-duration: 0.01ms !important;
+    }
+  }
+
+  body {
+    background-color: var(--color-bg);
+    color: var(--color-ink);
+    font-family: var(--font-sans);
+    font-size: 1rem;
+    line-height: 1.65;
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  h1,
+  h2,
+  h3,
+  h4 {
+    font-family: var(--font-display);
+    font-weight: 500;
+    line-height: 1.18;
+    letter-spacing: -0.015em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+
+  /* Доступность: видимый фокус для клавиатуры — §16 */
+  :focus-visible {
+    outline: 2px solid var(--color-accent);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  ::selection {
+    background-color: var(--color-accent);
+    color: var(--color-ink-invert);
+  }
+
+  /* Изображения не ломают сетку и не дают layout shift — §15 */
+  img,
+  picture,
+  svg {
+    max-width: 100%;
+    height: auto;
+  }
+}
+
+@layer utilities {
+  /* Вертикальный ритм секций */
+  .section-y {
+    padding-block: 3.5rem;
+  }
+
+  @media (min-width: 768px) {
+    .section-y {
+      padding-block: var(--spacing-section);
+    }
+  }
+
+  /* Надзаголовок секции: разреженные капсы */
+  .eyebrow {
+    font-size: 0.75rem;
+    font-weight: 600;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    color: var(--color-accent-soft);
+  }
+
+  /* Тонкая линия-разделитель */
+  .hairline {
+    border-top: 1px solid var(--color-line);
+  }
+}

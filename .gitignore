@@ -1,0 +1,30 @@
+# зависимости
+/node_modules
+/.pnp
+.pnp.*
+
+# сборка
+/.next/
+/out/
+/build
+next-env.d.ts
+
+# секреты — никогда не коммитим (CLAUDE.md §17)
+.env
+.env.*
+!.env.example
+
+# логи
+*.log
+npm-debug.log*
+
+# ОС и редакторы
+.DS_Store
+Thumbs.db
+.vscode/*
+!.vscode/extensions.json
+.idea
+
+# прочее
+/coverage
+*.tsbuildinfo
