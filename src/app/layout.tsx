@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Lora, Manrope } from "next/font/google";
 import { Header } from "@/components/layout/Header";
 import { Footer } from "@/components/layout/Footer";
+import { CookieConsent } from "@/components/analytics/CookieConsent";
 import { JsonLd, legalServiceSchema, personSchema } from "@/lib/schema-org";
 import { SITE_URL, site } from "@/content/site";
 import "@/styles/globals.css";
@@ -66,6 +67,7 @@ export default function RootLayout({
           {children}
         </main>
         <Footer />
+        <CookieConsent />
         <JsonLd data={legalServiceSchema()} />
         <JsonLd data={personSchema()} />
       </body>

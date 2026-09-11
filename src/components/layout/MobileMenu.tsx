@@ -15,11 +15,6 @@ export function MobileMenu({ items }: MobileMenuProps) {
   const pathname = usePathname();
   const panelRef = useRef<HTMLDivElement>(null);
 
-  // Закрываем меню при переходе на другую страницу.
-  useEffect(() => {
-    setOpen(false);
-  }, [pathname]);
-
   // Escape закрывает меню, фон не скроллится, фокус уходит в панель — §16.
   useEffect(() => {
     if (!open) return;
@@ -73,7 +68,7 @@ export function MobileMenu({ items }: MobileMenuProps) {
           id="mobile-menu"
           ref={panelRef}
           tabIndex={-1}
-          className="fixed inset-x-0 top-[var(--header-h,72px)] bottom-0 z-50 overflow-y-auto border-t border-line bg-bg px-5 py-8"
+          className="fixed inset-x-0 top-18 bottom-0 z-50 overflow-y-auto border-t border-line bg-bg px-5 py-8"
         >
           <nav aria-label="Основная навигация">
             <ul className="flex flex-col gap-1">
@@ -85,6 +80,7 @@ export function MobileMenu({ items }: MobileMenuProps) {
                     <Link
                       href={item.href}
                       aria-current={active ? "page" : undefined}
+                      onClick={() => setOpen(false)}
                       className={`block border-b border-line py-4 text-lg ${
                         active ? "text-accent" : "text-ink"
                       }`}
@@ -109,6 +105,7 @@ export function MobileMenu({ items }: MobileMenuProps) {
             </a>
             <Link
               href="/kontakty#zayavka"
+              onClick={() => setOpen(false)}
               className="mt-3 inline-flex items-center justify-center rounded-[4px] bg-accent px-6 py-3.5 font-medium text-ink-invert"
             >
               Получить консультацию
