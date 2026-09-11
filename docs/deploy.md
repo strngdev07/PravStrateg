@@ -1,0 +1,168 @@
+# Развёртывание сайта
+
+Требование к площадке: сервер в России. Это не предпочтение, а следствие п. 10.4
+политики обработки ПД («Оператор обеспечивает локализацию персональных данных на
+территории Российской Федерации») и §18 CLAUDE.md. Vercel, Netlify, Supabase и
+подобные площадки по этой причине не подходят.
+
+## Выбор хостинга
+
+| Провайдер | Ориентир по цене | Комментарий |
+|---|---|---|
+| **Timeweb Cloud** | ~900–1500 ₽/мес | Рекомендуется: быстро разворачивается, простая панель, оплата картой РФ |
+| Beget | от ~600 ₽/мес | Дешевле, панель проще, ресурсов меньше |
+| Selectel | от ~1200 ₽/мес | Надёжнее и дороже, разумно при росте нагрузки |
+
+Конфигурация под этот сайт: **2 vCPU, 2–4 ГБ RAM, 30–40 ГБ NVMe, Ubuntu 24.04**.
+База данных не нужна — заявки не хранятся на сервере.
+
+## Порядок
+
+### 1. Домен
+
+`pravstrateg.ru` — в панели регистратора прописать A-запись на IP сервера:
+
+```
+@      A     <IP сервера>
+www    A     <IP сервера>
+```
+
+Обновление DNS занимает от нескольких минут до нескольких часов.
+
+### 2. Подготовка сервера
+
+```bash
+ssh root@<IP>
+
+adduser deploy && usermod -aG sudo deploy
+apt update && apt upgrade -y
+apt install -y nginx git curl ufw
+
+ufw allow OpenSSH && ufw allow 'Nginx Full' && ufw enable
+
+# Node.js 22 LTS
+curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
+apt install -y nodejs
+```
+
+### 3. Код и сборка
+
+```bash
+su - deploy
+git clone <репозиторий> ~/pravstrateg
+cd ~/pravstrateg
+
+cp .env.example .env
+nano .env                 # заполнить SMTP, Telegram, Метрику
+
+npm ci
+npm run build
+```
+
+### 4. Автозапуск через systemd
+
+`/etc/systemd/system/pravstrateg.service`:
+
+```ini
+[Unit]
+Description=PravStrateg website
+After=network.target
+
+[Service]
+Type=simple
+User=deploy
+WorkingDirectory=/home/deploy/pravstrateg
+Environment=NODE_ENV=production
+Environment=PORT=3000
+EnvironmentFile=/home/deploy/pravstrateg/.env
+ExecStart=/usr/bin/npm run start
+Restart=always
+RestartSec=5
+
+[Install]
+WantedBy=multi-user.target
+```
+
+```bash
+sudo systemctl daemon-reload
+sudo systemctl enable --now pravstrateg
+sudo systemctl status pravstrateg
+```
+
+### 5. Nginx
+
+`/etc/nginx/sites-available/pravstrateg`:
+
+```nginx
+server {
+    listen 80;
+    server_name pravstrateg.ru www.pravstrateg.ru;
+
+    # Заявки с вложениями — до 10 МБ плюс запас на служебные поля
+    client_max_body_size 12M;
+
+    location / {
+        proxy_pass http://127.0.0.1:3000;
+        proxy_http_version 1.1;
+        proxy_set_header Host $host;
+        proxy_set_header X-Real-IP $remote_addr;
+        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+        proxy_set_header X-Forwarded-Proto $scheme;
+        proxy_set_header Upgrade $http_upgrade;
+        proxy_set_header Connection "upgrade";
+    }
+}
+```
+
+`X-Forwarded-For` обязателен: по нему работает ограничение частоты обращений
+и фиксируется IP в следе согласия на обработку ПД.
+
+```bash
+sudo ln -s /etc/nginx/sites-available/pravstrateg /etc/nginx/sites-enabled/
+sudo rm -f /etc/nginx/sites-enabled/default
+sudo nginx -t && sudo systemctl reload nginx
+```
+
+### 6. HTTPS
+
+```bash
+sudo apt install -y certbot python3-certbot-nginx
+sudo certbot --nginx -d pravstrateg.ru -d www.pravstrateg.ru
+```
+
+Certbot сам добавит редирект с HTTP на HTTPS и настроит автопродление.
+
+Заголовок `Strict-Transport-Security` отдаёт приложение — до выпуска сертификата
+сайт по HTTP открывать не нужно, иначе браузер запомнит требование HTTPS.
+
+### 7. Проверка после запуска
+
+```bash
+curl -sI https://pravstrateg.ru | grep -iE "content-security|strict-transport|x-frame"
+curl -s https://pravstrateg.ru/robots.txt
+curl -s https://pravstrateg.ru/sitemap.xml | head
+```
+
+- отправить тестовую заявку с файлом — письмо должно прийти на pravstrateg@mail.ru,
+  дубль в Telegram;
+- открыть сайт в приватном окне: до нажатия «Принять» в панели Network не должно
+  быть запросов к `mc.yandex.ru`;
+- проверить, что `/policy` открывается ровно по адресу из п. 12.4 политики.
+
+### 8. Обновление сайта
+
+```bash
+cd ~/pravstrateg
+git pull
+npm ci
+npm run build
+sudo systemctl restart pravstrateg
+```
+
+## Что настроить после запуска
+
+- Яндекс.Вебмастер: подтвердить права, отправить sitemap
+- Яндекс.Метрика: создать счётчик, вписать номер в `.env`, задать цели
+  (отправка формы, клик по телефону)
+- Резервное копирование конфигурации и `.env` (в репозиторий `.env` не попадает)
+- Мониторинг доступности

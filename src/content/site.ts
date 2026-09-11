@@ -30,17 +30,36 @@ export const contacts = {
     href: "mailto:pravstrateg@mail.ru",
     raw: "pravstrateg@mail.ru",
   },
-  /**
-   * Мессенджеры. WhatsApp собирается из номера телефона и работает сразу.
-   * Telegram и MAX включаются, как только будут известны аккаунты:
-   * достаточно подставить ссылку вместо null — в интерфейсе появятся сами.
-   */
-  messengers: {
-    whatsapp: "https://wa.me/79226257532" as string | null,
-    telegram: null as string | null,
-    max: null as string | null,
-  },
 } as const;
+
+export type Messenger = {
+  label: string;
+  /** Прямая ссылка. null — канал есть, но открыть его ссылкой нельзя. */
+  href: string | null;
+  /** Пояснение для каналов без ссылки. */
+  note?: string;
+};
+
+/**
+ * Мессенджеры. У MAX нет публичного формата ссылки на профиль по номеру —
+ * только личная пригласительная ссылка из приложения. Пока её нет, канал
+ * показываем текстом. Появится ссылка — достаточно подставить её в href.
+ */
+export const messengers: readonly Messenger[] = [
+  { label: "Telegram", href: "https://t.me/IvanNovikov_1" },
+  { label: "WhatsApp", href: "https://wa.me/79226257532" },
+  { label: "MAX", href: null, note: "по номеру телефона" },
+] as const;
+
+/** Только те каналы, которые можно открыть по ссылке. */
+export const linkedMessengers = messengers.filter(
+  (item): item is Messenger & { href: string } => item.href !== null,
+);
+
+/** Каналы без ссылки — выводятся текстом рядом с номером. */
+export const unlinkedMessengers = messengers.filter(
+  (item) => item.href === null,
+);
 
 /** Реквизиты ИП — подвал, страница оплаты, счета. */
 export const requisites = {

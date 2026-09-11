@@ -1,6 +1,8 @@
 import type { Metadata } from "next";
 import Link from "next/link";
-import { Section, SectionHeading } from "@/components/ui/Section";
+import { Section } from "@/components/ui/Section";
+import { LeaderPhotoFrame } from "@/components/blocks/LeaderPhoto";
+import { leaderPhotos } from "@/lib/media";
 import { FinalCta, WorkStages } from "@/components/blocks/CommonBlocks";
 import { JsonLd, breadcrumbSchema, faqSchema } from "@/lib/schema-org";
 import { pageMetadata } from "@/lib/seo";
@@ -18,19 +20,32 @@ export const metadata: Metadata = pageMetadata({
 export default function BusinessPage() {
   return (
     <>
-      <Section tone="soft">
-        <SectionHeading
-          as="h1"
-          eyebrow="Бизнесу"
-          title={businessCopy.title}
-          lead={businessCopy.lead}
-        />
-        <div className="max-w-2xl">
-          {businessCopy.intro.map((paragraph) => (
-            <p key={paragraph} className="mb-4 leading-relaxed text-ink-soft">
-              {paragraph}
+      <Section tone="soft" width="wide">
+        <div className="grid gap-10 lg:grid-cols-12 lg:gap-14">
+          <div className="lg:col-span-7">
+            <p className="eyebrow mb-5">Бизнесу</p>
+            <h1 className="text-[2rem] sm:text-[2.6rem]">
+              {businessCopy.title}
+            </h1>
+            <p className="mt-6 max-w-2xl text-lg text-ink-soft">
+              {businessCopy.lead}
             </p>
-          ))}
+            <div className="mt-6 max-w-2xl">
+              {businessCopy.intro.map((paragraph) => (
+                <p key={paragraph} className="mb-4 leading-relaxed text-ink-soft">
+                  {paragraph}
+                </p>
+              ))}
+            </div>
+          </div>
+
+          <div className="lg:col-span-5">
+            <LeaderPhotoFrame
+              photo={leaderPhotos.full}
+              sizes="(min-width: 1024px) 420px, (min-width: 640px) 60vw, 100vw"
+              className="mx-auto max-w-sm lg:max-w-none"
+            />
+          </div>
         </div>
       </Section>
 

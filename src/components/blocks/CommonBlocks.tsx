@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Section, SectionHeading } from "@/components/ui/Section";
 import { PracticeCard } from "@/components/ui/Card";
 import { ButtonLink } from "@/components/ui/Button";
+import { MessengerLinks } from "@/components/ui/MessengerLinks";
 import { LeaderPhotoFrame } from "./LeaderPhoto";
 import { leaderPhotos } from "@/lib/media";
 import { practices, practiceHref } from "@/content/practices";
@@ -199,12 +200,6 @@ export function LeaderBlock() {
 
 /** Финальный призыв вместе с контактами — один блок вместо двух. */
 export function FinalCta() {
-  const messengers = [
-    { label: "Telegram", href: contacts.messengers.telegram },
-    { label: "WhatsApp", href: contacts.messengers.whatsapp },
-    { label: "MAX", href: contacts.messengers.max },
-  ].filter((item): item is { label: string; href: string } => Boolean(item.href));
-
   return (
     <Section tone="deep">
       <div className="grid gap-10 lg:grid-cols-12 lg:gap-14">
@@ -245,22 +240,7 @@ export function FinalCta() {
             {contacts.email.display}
           </a>
 
-          {messengers.length > 0 ? (
-            <ul className="mt-5 flex flex-wrap gap-x-5 gap-y-2">
-              {messengers.map((item) => (
-                <li key={item.label}>
-                  <a
-                    href={item.href}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    className="text-sm text-white/80 underline underline-offset-4 hover:text-ink-invert"
-                  >
-                    {item.label}
-                  </a>
-                </li>
-              ))}
-            </ul>
-          ) : null}
+          <MessengerLinks tone="invert" className="mt-5" />
 
           <p className="mt-6 text-sm leading-relaxed text-white/50">
             {site.geo}

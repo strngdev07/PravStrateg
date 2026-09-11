@@ -21,6 +21,12 @@ export const leaderPhotos = {
     width: 853,
     height: 1280,
   },
+  full: {
+    src: "/images/ivan-novikov-full.jpg",
+    alt: "Иван Новиков — юридическое сопровождение бизнеса",
+    width: 853,
+    height: 1280,
+  },
 } as const;
 
 export type LeaderPhoto = (typeof leaderPhotos)[keyof typeof leaderPhotos];

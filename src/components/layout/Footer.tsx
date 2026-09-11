@@ -1,19 +1,10 @@
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
+import { MessengerLinks } from "@/components/ui/MessengerLinks";
 import { contacts, legalNav, mainNav, requisites, site } from "@/content/site";
-
-function messengerLinks() {
-  const { whatsapp, telegram, max } = contacts.messengers;
-  return [
-    { label: "Telegram", href: telegram },
-    { label: "WhatsApp", href: whatsapp },
-    { label: "MAX", href: max },
-  ].filter((item): item is { label: string; href: string } => Boolean(item.href));
-}
 
 export function Footer() {
   const year = new Date().getFullYear();
-  const messengers = messengerLinks();
 
   return (
     <footer className="hairline bg-bg-soft">
@@ -62,22 +53,7 @@ export function Footer() {
               {contacts.email.display}
             </a>
 
-            {messengers.length > 0 ? (
-              <ul className="mt-4 flex flex-wrap gap-x-5 gap-y-2">
-                {messengers.map((item) => (
-                  <li key={item.label}>
-                    <a
-                      href={item.href}
-                      target="_blank"
-                      rel="noopener noreferrer"
-                      className="text-sm text-accent underline-offset-4 hover:underline"
-                    >
-                      {item.label}
-                    </a>
-                  </li>
-                ))}
-              </ul>
-            ) : null}
+            <MessengerLinks className="mt-4" />
           </div>
         </div>
 

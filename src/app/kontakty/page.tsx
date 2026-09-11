@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Suspense } from "react";
 import { Section, SectionHeading } from "@/components/ui/Section";
 import { LeadForm } from "@/components/forms/LeadForm";
+import { MessengerLinks } from "@/components/ui/MessengerLinks";
 import { JsonLd, breadcrumbSchema } from "@/lib/schema-org";
 import { pageMetadata } from "@/lib/seo";
 import { contacts, requisites, site } from "@/content/site";
@@ -14,12 +15,6 @@ export const metadata: Metadata = pageMetadata({
 });
 
 export default function ContactsPage() {
-  const messengers = [
-    { label: "Telegram", href: contacts.messengers.telegram },
-    { label: "WhatsApp", href: contacts.messengers.whatsapp },
-    { label: "MAX", href: contacts.messengers.max },
-  ].filter((item): item is { label: string; href: string } => Boolean(item.href));
-
   return (
     <>
       <Section tone="soft">
@@ -48,25 +43,8 @@ export default function ContactsPage() {
                 {contacts.email.display}
               </a>
 
-              {messengers.length > 0 ? (
-                <>
-                  <p className="eyebrow mt-7 mb-3">Мессенджеры</p>
-                  <ul className="flex flex-wrap gap-x-5 gap-y-2">
-                    {messengers.map((item) => (
-                      <li key={item.label}>
-                        <a
-                          href={item.href}
-                          target="_blank"
-                          rel="noopener noreferrer"
-                          className="text-accent underline-offset-4 hover:underline"
-                        >
-                          {item.label}
-                        </a>
-                      </li>
-                    ))}
-                  </ul>
-                </>
-              ) : null}
+              <p className="eyebrow mt-7 mb-3">Мессенджеры</p>
+              <MessengerLinks />
 
               <p className="mt-7 border-t border-line pt-5 text-sm leading-relaxed text-ink-soft">
                 {site.geo}. Документы принимаем в электронном виде, связь по
