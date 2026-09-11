@@ -1,10 +1,14 @@
 import { NextResponse } from "next/server";
-import { leadSchema, categoryLabel, clientTypeLabels, purposeLabels } from "@/lib/validation/lead";
+import { leadSchema } from "@/lib/validation/lead";
 import { prepareAttachments, formatBytes } from "@/lib/files";
-import { isMailConfigured, sendMail } from "@/lib/mail";
-import { sendTelegramNotification } from "@/lib/telegram";
+import {
+  escapeHtml,
+  isTelegramConfigured,
+  sendTelegramDocument,
+  sendTelegramMessage,
+} from "@/lib/telegram";
+import { buildLeadCard } from "@/lib/lead-notification";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
-import { POLICY_VERSION } from "@/content/site";
 
 export const runtime = "nodejs";
 /** Заявка обрабатывается только на сервере, кэшировать нечего. */
@@ -12,6 +16,9 @@ export const dynamic = "force-dynamic";
 
 /** Бот заполняет форму мгновенно; человеку нужно хотя бы несколько секунд. */
 const MIN_FILL_MS = 3000;
+
+const CONTACT_FALLBACK =
+  "Не удалось отправить заявку. Пожалуйста, позвоните нам по телефону +7 922 625 75 32 — мы примем обращение по телефону.";
 
 function badRequest(error: string, status = 400) {
   return NextResponse.json({ ok: false, error }, { status });
@@ -85,87 +92,44 @@ export async function POST(request: Request) {
   const files = attachmentsResult.files;
   const receivedAt = new Date();
 
-  // 5. След согласия на обработку ПД: что принято, когда и с какого адреса
-  const consentTrace = [
-    `Согласие на обработку персональных данных: да`,
-    `Редакция политики: ${POLICY_VERSION}`,
-    `Время (UTC): ${receivedAt.toISOString()}`,
-    `IP: ${ip}`,
-    `User-Agent: ${request.headers.get("user-agent") ?? "не определён"}`,
-  ].join("\n");
-
-  const summary = [
-    `Новая заявка с сайта pravstrateg.ru`,
-    ``,
-    `Цель обращения: ${purposeLabels[data.purpose]}`,
-    `Категория: ${categoryLabel(data.category)}`,
-    `Статус: ${clientTypeLabels[data.clientType]}`,
-    ``,
-    `Имя: ${data.name}`,
-    `Телефон: ${data.phone}`,
-    `Почта: ${data.email || "не указана"}`,
-    `Мессенджер: ${data.messenger || "не указан"}`,
-    ``,
-    `Ситуация:`,
-    data.message,
-    ``,
-    files.length
-      ? `Вложения (${files.length}): ${files
-          .map((file) => `${file.filename} — ${formatBytes(file.size)}`)
-          .join(", ")}`
-      : `Вложения: нет`,
-    ``,
-    `— — —`,
-    consentTrace,
-  ].join("\n");
-
-  // 6. Письмо — основной канал. Без него заявку принимать нельзя.
-  if (!isMailConfigured()) {
-    console.error("[lead] SMTP не настроен — заявка не может быть отправлена");
+  // 5. Telegram — основной канал уведомлений
+  if (!isTelegramConfigured()) {
+    console.error("[lead] Telegram не настроен — заявка не может быть доставлена");
     return badRequest(
-      "Форма временно недоступна. Пожалуйста, позвоните нам или напишите на почту.",
+      "Форма временно недоступна. Пожалуйста, позвоните нам или напишите в мессенджер.",
       503,
     );
   }
 
-  try {
-    await sendMail({
-      subject: `Заявка с сайта: ${categoryLabel(data.category)} — ${data.name}`,
-      text: summary,
-      replyTo: data.email || undefined,
-      attachments: files.map((file) => ({
-        filename: file.filename,
-        content: file.content,
-        contentType: file.contentType,
-      })),
-    });
-  } catch {
-    // Содержимое заявки в лог не пишем — §17.
-    console.error("[lead] не удалось отправить письмо с заявкой");
-    return badRequest(
-      "Не удалось отправить заявку. Пожалуйста, позвоните нам или напишите на почту.",
-      502,
-    );
+  const card = buildLeadCard(data, files.length, receivedAt);
+  const messageDelivered = await sendTelegramMessage(card.message, card.buttons);
+
+  if (!messageDelivered) {
+    // Резервного канала нет: клиенту сообщаем прямо, чтобы он позвонил,
+    // и обращение не пропало молча.
+    console.error(`[lead] заявка ${card.leadNumber} не доставлена`);
+    return badRequest(CONTACT_FALLBACK, 502);
   }
 
-  // 7. Telegram — дублирующий канал, его сбой не влияет на результат.
-  await sendTelegramNotification([
-    "Новая заявка с сайта",
-    "",
-    `Цель: ${purposeLabels[data.purpose]}`,
-    `Категория: ${categoryLabel(data.category)}`,
-    `Статус: ${clientTypeLabels[data.clientType]}`,
-    `Имя: ${data.name}`,
-    `Телефон: ${data.phone}`,
-    `Почта: ${data.email || "не указана"}`,
-    `Мессенджер: ${data.messenger || "не указан"}`,
-    "",
-    data.message.length > 700
-      ? `${data.message.slice(0, 700)}…`
-      : data.message,
-    "",
-    files.length ? `Вложений: ${files.length} (в письме)` : "Вложений нет",
-  ]);
+  // 6. Документы клиента уходят следом за карточкой
+  const failed: string[] = [];
+  for (const [index, file] of files.entries()) {
+    const caption = `Заявка № ${escapeHtml(card.leadNumber)} · документ ${index + 1} из ${files.length} · ${escapeHtml(formatBytes(file.size))}`;
+    const sent = await sendTelegramDocument(file, caption);
+    if (!sent) failed.push(file.filename);
+  }
+
+  // Клиент своё отправил и получит подтверждение; о недошедших файлах
+  // предупреждаем получателя, чтобы он запросил их у клиента сам.
+  if (failed.length > 0) {
+    await sendTelegramMessage(
+      [
+        `⚠️ <b>Заявка № ${escapeHtml(card.leadNumber)}</b>`,
+        `Не удалось передать документов: ${failed.length}.`,
+        "Запросите их у клиента при первом контакте.",
+      ].join("\n"),
+    );
+  }
 
   return NextResponse.json({ ok: true });
 }

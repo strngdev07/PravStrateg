@@ -325,7 +325,7 @@ export function LeadForm() {
             />
             <p className="mt-2 text-xs text-ink-muted">
               До {FILE_LIMITS.maxFiles} файлов, суммарно до 10 МБ. Форматы:
-              PDF, JPG, PNG, DOC, DOCX. Файлы уходят вложением в письмо и на
+              PDF, JPG, PNG, DOC, DOCX. Файлы передаются юристу напрямую и на
               сайте не хранятся.
             </p>
             {fileNote ? (

@@ -79,7 +79,7 @@ git clone <репозиторий> ~/pravstrateg
 cd ~/pravstrateg
 
 cp .env.example .env
-nano .env                 # заполнить SMTP, Telegram, Метрику
+nano .env                 # заполнить токен бота, получателей, Метрику
 
 npm ci
 npm run build
@@ -169,8 +169,8 @@ curl -s https://pravstrateg.ru/robots.txt
 curl -s https://pravstrateg.ru/sitemap.xml | head
 ```
 
-- отправить тестовую заявку с файлом — письмо должно прийти на pravstrateg@mail.ru,
-  дубль в Telegram;
+- отправить тестовую заявку с файлом — карточка и документ должны прийти
+  в Telegram всем получателям из `TELEGRAM_CHAT_ID`;
 - открыть сайт в приватном окне: до нажатия «Принять» в панели Network не должно
   быть запросов к `mc.yandex.ru`;
 - проверить, что `/policy` открывается ровно по адресу из п. 12.4 политики.
