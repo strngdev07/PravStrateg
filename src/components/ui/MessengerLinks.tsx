@@ -1,15 +1,10 @@
 import { contacts, linkedMessengers, unlinkedMessengers } from "@/content/site";
 
 type MessengerLinksProps = {
-  /** invert — для тёмного фона финального блока. */
   tone?: "default" | "invert";
   className?: string;
 };
 
-/**
- * Список мессенджеров. Каналы со ссылкой выводятся ссылками,
- * каналы без неё (сейчас MAX) — пояснением рядом с номером телефона.
- */
 export function MessengerLinks({
   tone = "default",
   className = "",

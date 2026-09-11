@@ -1,9 +1,3 @@
-/**
- * Единая точка правды по контактам, реквизитам и навигации.
- * Меняется здесь — подхватывается во всём сайте (шапка, подвал, контакты,
- * страница оплаты, Schema.org, письма по заявкам).
- */
-
 export const SITE_URL = "https://pravstrateg.ru";
 
 export const site = {
@@ -34,40 +28,31 @@ export const contacts = {
 
 export type Messenger = {
   label: string;
-  /** Прямая ссылка. null — канал есть, но открыть его ссылкой нельзя. */
   href: string | null;
-  /** Пояснение для каналов без ссылки. */
   note?: string;
 };
 
-/**
- * Мессенджеры. У MAX нет публичного формата ссылки на профиль по номеру —
- * только личная пригласительная ссылка из приложения. Пока её нет, канал
- * показываем текстом. Появится ссылка — достаточно подставить её в href.
- */
 export const messengers: readonly Messenger[] = [
   { label: "Telegram", href: "https://t.me/IvanNovikov_1" },
   { label: "WhatsApp", href: "https://wa.me/79226257532" },
   { label: "MAX", href: null, note: "по номеру телефона" },
 ] as const;
 
-/** Только те каналы, которые можно открыть по ссылке. */
 export const linkedMessengers = messengers.filter(
   (item): item is Messenger & { href: string } => item.href !== null,
 );
 
-/** Каналы без ссылки — выводятся текстом рядом с номером. */
 export const unlinkedMessengers = messengers.filter(
   (item) => item.href === null,
 );
 
-/** Реквизиты ИП — подвал, страница оплаты, счета. */
 export const requisites = {
   legalName: "Индивидуальный предприниматель Новиков Иван Владимирович",
   shortLegalName: "ИП Новиков Иван Владимирович",
   inn: "560910983072",
   ogrnip: "312565822900079",
   address: "238326, Калининградская область, г. Зеленоградск, ул. Еловая, д. 4а/4",
+  addressesMatch: true,
   bank: {
     account: "40802810700810117114",
     name: 'Филиал «Центральный» Банка ВТБ (ПАО)',
@@ -76,12 +61,13 @@ export const requisites = {
   },
 } as const;
 
+export const paymentSystems = ["VISA", "MasterCard", "МИР"] as const;
+
 export type NavItem = {
   label: string;
   href: string;
 };
 
-/** Основная навигация. Кейсы и публикации появятся вместе с контентом. */
 export const mainNav: readonly NavItem[] = [
   { label: "О компании", href: "/o-kompanii" },
   { label: "Практики", href: "/praktiki" },
@@ -96,5 +82,10 @@ export const legalNav: readonly NavItem[] = [
   { label: "Политика cookies", href: "/cookies" },
 ] as const;
 
-/** Версия политики ПД — попадает в след согласия при отправке формы. */
+export const paymentNav: readonly NavItem[] = [
+  { label: "Реквизиты", href: "/rekvizity" },
+  { label: "Правила оплаты и безопасность платежей", href: "/oplata/pravila" },
+  { label: "Возврат средств и отказ от услуг", href: "/oplata/vozvrat" },
+] as const;
+
 export const POLICY_VERSION = "04.09.2026";

@@ -1,11 +1,3 @@
-/**
- * Ограничение частоты обращений — CLAUDE.md §17.
- *
- * Хранилище в памяти процесса: сайт работает одним инстансом, отдельная
- * зависимость ради счётчика здесь не нужна. Если появится второй инстанс,
- * реализацию заменит Redis — интерфейс останется прежним.
- */
-
 type Bucket = {
   count: number;
   resetAt: number;
@@ -13,7 +5,6 @@ type Bucket = {
 
 const buckets = new Map<string, Bucket>();
 
-/** Раз в некоторое время подчищаем истёкшие записи, чтобы карта не росла. */
 function sweep(now: number) {
   if (buckets.size < 500) return;
   for (const [key, bucket] of buckets) {
@@ -57,10 +48,6 @@ export function rateLimit(
   };
 }
 
-/**
- * IP отправителя. За Nginx реальный адрес приходит в X-Forwarded-For —
- * берём первый элемент цепочки.
- */
 export function clientIp(headers: Headers): string {
   const forwarded = headers.get("x-forwarded-for");
   if (forwarded) {

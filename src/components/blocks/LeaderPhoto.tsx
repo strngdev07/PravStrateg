@@ -3,16 +3,11 @@ import { hasPhoto, type LeaderPhoto as Photo } from "@/lib/media";
 
 type LeaderPhotoProps = {
   photo: Photo;
-  /** Первый экран грузим приоритетно — влияет на LCP (§15). */
   priority?: boolean;
   sizes?: string;
   className?: string;
 };
 
-/**
- * Портрет руководителя с фиксированным соотношением сторон:
- * место под изображение занято всегда, layout shift исключён (§15).
- */
 export function LeaderPhotoFrame({
   photo,
   priority = false,

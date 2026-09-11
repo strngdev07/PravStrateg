@@ -7,7 +7,6 @@ import { practice as administrativnye } from "./administrativnye";
 import { practice as voennosluzhashchie } from "./prava-voennosluzhashchih";
 import { practice as apellyaciya } from "./apellyaciya-i-kassaciya";
 
-/** Новая практика: добавить файл рядом и одну строку сюда. */
 export const practices: readonly Practice[] = [
   semejnye,
   nasledstvennye,
@@ -27,12 +26,10 @@ export function practiceHref(slug: string): string {
   return `/praktiki/${slug}`;
 }
 
-/** Практики для частных клиентов (включая универсальные). */
 export const personPractices = practices.filter(
   (item) => item.audience === "person" || item.audience === "both",
 );
 
-/** Практики, актуальные для организаций и предпринимателей. */
 export const businessPractices = practices.filter(
   (item) => item.audience === "business" || item.audience === "both",
 );

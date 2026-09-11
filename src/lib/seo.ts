@@ -6,17 +6,11 @@ const OG_IMAGE = "/og/pravstrateg.jpg";
 type PageMetaInput = {
   title: string;
   description: string;
-  /** Путь без домена, например "/praktiki". Для главной — "/". */
   path: string;
-  /** Заголовок для OG, если нужен другой. */
   ogTitle?: string;
   noindex?: boolean;
 };
 
-/**
- * Единый сборщик метаданных: уникальные title/description, canonical и OG —
- * CLAUDE.md §14. Каждая страница вызывает его вместо ручной сборки объекта.
- */
 export function pageMetadata({
   title,
   description,

@@ -1,12 +1,6 @@
 import { z } from "zod";
 import { practices } from "@/content/practices";
 
-/**
- * Схема заявки — CLAUDE.md §7.
- * Используется и на клиенте (подсказки), и на сервере (§17: серверная
- * валидация обязательна, клиентской доверять нельзя).
- */
-
 export const CLIENT_TYPES = ["person", "org"] as const;
 export type ClientType = (typeof CLIENT_TYPES)[number];
 
@@ -19,7 +13,6 @@ export const purposeLabels: Record<Purpose, string> = {
   schet: "Запрос счёта на оплату",
 };
 
-/** Категории вопроса собираются из практик — новая практика попадает сюда сама. */
 export const categoryOptions = [
   ...practices.map((item) => ({ value: item.slug, label: item.navTitle })),
   { value: "biznes", label: "Вопрос для бизнеса" },
@@ -42,7 +35,6 @@ export const FILE_LIMITS = {
   ],
 } as const;
 
-/** Телефон: цифры, пробелы, скобки, плюс и дефисы; 10–18 знаков по существу. */
 const phonePattern = /^[+\d][\d\s()\-]{9,24}$/;
 
 export const leadSchema = z.object({
@@ -99,15 +91,8 @@ export const leadSchema = z.object({
       message: "Без согласия на обработку данных мы не сможем принять обращение",
     }),
 
-  /**
-   * Honeypot: настоящий человек это поле не видит и не заполняет.
-   * Схема его намеренно НЕ отклоняет — иначе бот получил бы в ответе
-   * подсказку, какое поле является ловушкой. Решение принимается
-   * отдельно в обработчике, и ответ выглядит как успешная отправка.
-   */
   website: z.string().max(200).optional().or(z.literal("")),
 
-  /** Время отрисовки формы — отсекает мгновенную отправку ботом. */
   renderedAt: z.coerce.number().optional(),
 });
 

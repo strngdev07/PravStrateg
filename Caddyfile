@@ -1,0 +1,32 @@
+# Caddy сам получает и продлевает сертификат Let's Encrypt.
+# Отдельный certbot и задание в cron не нужны.
+
+pravstrateg.ru {
+	# Заявки с вложениями — до 10 МБ плюс запас на служебные поля
+	request_body {
+		max_size 12MB
+	}
+
+	# Реальный IP посетителя нужен для ограничения частоты обращений
+	# и для следа согласия на обработку персональных данных
+	reverse_proxy app:3000 {
+		header_up X-Real-IP {remote_host}
+		header_up X-Forwarded-For {remote_host}
+		header_up X-Forwarded-Proto {scheme}
+	}
+
+	encode zstd gzip
+
+	log {
+		output file /data/access.log {
+			roll_size 10MB
+			roll_keep 5
+		}
+	}
+}
+
+# Canonical на страницах указывает адрес без www, поэтому обслуживать
+# сайт на обоих именах нельзя: получится дублирование для поисковиков.
+www.pravstrateg.ru {
+	redir https://pravstrateg.ru{uri} permanent
+}

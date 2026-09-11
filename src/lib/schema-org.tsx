@@ -1,11 +1,5 @@
 import { SITE_URL, contacts, requisites, site } from "@/content/site";
 
-/**
- * Разметка Schema.org — CLAUDE.md §14.
- * LegalService + Person для организации и руководителя,
- * BreadcrumbList для вложенных страниц, FAQPage для блоков вопросов.
- */
-
 export function legalServiceSchema() {
   return {
     "@context": "https://schema.org",
@@ -72,7 +66,6 @@ export function faqSchema(items: readonly FaqItem[]) {
   };
 }
 
-/** Безопасный вывод JSON-LD в разметку. */
 export function JsonLd({ data }: { data: object }) {
   return (
     <script

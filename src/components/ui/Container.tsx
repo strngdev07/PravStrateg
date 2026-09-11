@@ -2,7 +2,6 @@ import type { ReactNode } from "react";
 
 type ContainerProps = {
   children: ReactNode;
-  /** narrow — для текстовых страниц, где важна длина строки. */
   width?: "default" | "narrow" | "wide";
   className?: string;
 };

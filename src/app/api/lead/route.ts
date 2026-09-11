@@ -11,10 +11,8 @@ import { buildLeadCard } from "@/lib/lead-notification";
 import { clientIp, rateLimit } from "@/lib/rate-limit";
 
 export const runtime = "nodejs";
-/** Заявка обрабатывается только на сервере, кэшировать нечего. */
 export const dynamic = "force-dynamic";
 
-/** Бот заполняет форму мгновенно; человеку нужно хотя бы несколько секунд. */
 const MIN_FILL_MS = 3000;
 
 const CONTACT_FALLBACK =
@@ -27,7 +25,6 @@ function badRequest(error: string, status = 400) {
 export async function POST(request: Request) {
   const ip = clientIp(request.headers);
 
-  // 1. Частота обращений — §17
   const limit = rateLimit(`lead:${ip}`, { limit: 5, windowMs: 10 * 60 * 1000 });
   if (!limit.allowed) {
     return NextResponse.json(
@@ -40,7 +37,6 @@ export async function POST(request: Request) {
     );
   }
 
-  // 2. Разбор формы
   let form: FormData;
   try {
     form = await request.formData();
@@ -69,8 +65,6 @@ export async function POST(request: Request) {
 
   const data = parsed.data;
 
-  // 3. Ловушки для ботов. Ответ намеренно выглядит как успех,
-  //    чтобы автоматика не подбирала обход.
   const filledTooFast =
     typeof data.renderedAt === "number" &&
     Number.isFinite(data.renderedAt) &&
@@ -80,7 +74,6 @@ export async function POST(request: Request) {
     return NextResponse.json({ ok: true });
   }
 
-  // 4. Вложения: проверяем сигнатуры, на диск не пишем
   const attachmentsResult = await prepareAttachments(
     form.getAll("files").filter((item): item is File => item instanceof File),
   );
@@ -92,7 +85,6 @@ export async function POST(request: Request) {
   const files = attachmentsResult.files;
   const receivedAt = new Date();
 
-  // 5. Telegram — основной канал уведомлений
   if (!isTelegramConfigured()) {
     console.error("[lead] Telegram не настроен — заявка не может быть доставлена");
     return badRequest(
@@ -105,13 +97,10 @@ export async function POST(request: Request) {
   const messageDelivered = await sendTelegramMessage(card.message, card.buttons);
 
   if (!messageDelivered) {
-    // Резервного канала нет: клиенту сообщаем прямо, чтобы он позвонил,
-    // и обращение не пропало молча.
     console.error(`[lead] заявка ${card.leadNumber} не доставлена`);
     return badRequest(CONTACT_FALLBACK, 502);
   }
 
-  // 6. Документы клиента уходят следом за карточкой
   const failed: string[] = [];
   for (const [index, file] of files.entries()) {
     const caption = `Заявка № ${escapeHtml(card.leadNumber)} · документ ${index + 1} из ${files.length} · ${escapeHtml(formatBytes(file.size))}`;
@@ -119,8 +108,6 @@ export async function POST(request: Request) {
     if (!sent) failed.push(file.filename);
   }
 
-  // Клиент своё отправил и получит подтверждение; о недошедших файлах
-  // предупреждаем получателя, чтобы он запросил их у клиента сам.
   if (failed.length > 0) {
     await sendTelegramMessage(
       [

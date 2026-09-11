@@ -1,16 +1,5 @@
-/**
- * Telegram — основной канал уведомлений о заявках.
- *
- * Сюда уходит и карточка обращения, и приложенные клиентом документы:
- * почта как канал не используется (решение заказчика от 06.09.2026).
- * Поэтому сбой отправки здесь — это отказ приёма заявки, а не потеря
- * дублирующего уведомления: обработчик формы сообщает об этом клиенту,
- * чтобы обращение не пропало молча.
- */
-
 const API_BASE = "https://api.telegram.org";
 
-/** Предел Telegram — 4096 символов. Берём с запасом на служебные строки. */
 const MAX_MESSAGE_LENGTH = 3800;
 
 export type InlineButton = {
@@ -22,12 +11,6 @@ export function isTelegramConfigured(): boolean {
   return Boolean(process.env.TELEGRAM_BOT_TOKEN && process.env.TELEGRAM_CHAT_ID);
 }
 
-/**
- * Получателей может быть несколько: TELEGRAM_CHAT_ID принимает список
- * через запятую. Так уведомление приходит и руководителю, и помощнику,
- * без создания общего чата. Один общий чат тоже подходит — тогда достаточно
- * его идентификатора.
- */
 function credentials(): { token: string; chatIds: string[] } | null {
   const token = process.env.TELEGRAM_BOT_TOKEN?.trim();
   const chatIds = (process.env.TELEGRAM_CHAT_ID ?? "")
@@ -38,7 +21,6 @@ function credentials(): { token: string; chatIds: string[] } | null {
   return token && chatIds.length > 0 ? { token, chatIds } : null;
 }
 
-/** Экранирование под parse_mode=HTML. */
 export function escapeHtml(value: string): string {
   return value
     .replace(/&/g, "&amp;")
@@ -46,10 +28,6 @@ export function escapeHtml(value: string): string {
     .replace(/>/g, "&gt;");
 }
 
-/**
- * Режет длинный текст по границам абзацев, а если абзац сам не влезает —
- * по границам строк и слов. Разрыв внутри слова — крайний случай.
- */
 export function splitMessage(
   text: string,
   limit = MAX_MESSAGE_LENGTH,
@@ -76,7 +54,6 @@ export function splitMessage(
 
 type TelegramCallResult = { ok: boolean };
 
-/** Один вызов API с повтором: сетевые сбои и 5xx лечатся вторым заходом. */
 async function callApi(
   method: string,
   body: BodyInit,
@@ -99,13 +76,11 @@ async function callApi(
 
       if (response.ok) return { ok: true };
 
-      // 4xx повторять бессмысленно — запрос неверен сам по себе.
       if (response.status < 500 && response.status !== 429) {
         console.error(`[telegram] ${method}: отказ ${response.status}`);
         return { ok: false };
       }
     } catch {
-      // Причину не логируем: в теле запроса персональные данные (§17).
     }
 
     if (attempt === 0) {
@@ -117,10 +92,6 @@ async function callApi(
   return { ok: false };
 }
 
-/**
- * Отправляет текст. Длинное сообщение разбивается на части,
- * кнопки прикрепляются к первой.
- */
 export async function sendTelegramMessage(
   html: string,
   buttons: readonly InlineButton[] = [],
@@ -158,8 +129,6 @@ export async function sendTelegramMessage(
     if (chatOk) deliveredToAnyone = true;
   }
 
-  // Достаточно, чтобы заявка дошла хотя бы до одного получателя:
-  // недоступность второго адресата не повод отклонять обращение клиента.
   return deliveredToAnyone;
 }
 
@@ -169,7 +138,6 @@ export type TelegramDocument = {
   contentType: string;
 };
 
-/** Отправляет один документ. Лимит Telegram для ботов — 50 МБ. */
 export async function sendTelegramDocument(
   file: TelegramDocument,
   caption: string,

@@ -8,21 +8,8 @@ import {
 } from "@/lib/validation/lead";
 import { POLICY_VERSION } from "@/content/site";
 
-/**
- * Карточка заявки для Telegram.
- *
- * Задача — чтобы Иван мог сработать по обращению прямо из уведомления:
- * увидеть суть, нажать на телефон для звонка и открыть переписку с клиентом
- * одной кнопкой, не переписывая контакты вручную.
- */
-
-/** Часовой пояс оператора: Зеленоградск Калининградской области, UTC+2. */
 const OPERATOR_TIMEZONE = "Europe/Kaliningrad";
 
-/**
- * Короткий номер обращения: ДДММ и четыре знака.
- * Его удобно назвать вслух клиенту и найти поиском в переписке с ботом.
- */
 export function makeLeadNumber(now: Date): string {
   const day = String(now.getUTCDate()).padStart(2, "0");
   const month = String(now.getUTCMonth() + 1).padStart(2, "0");
@@ -41,7 +28,6 @@ function formatMoment(now: Date): string {
   }).format(now);
 }
 
-/** Приводит телефон к виду, пригодному для ссылок: только цифры, код страны 7. */
 function phoneDigits(phone: string): string | null {
   const digits = phone.replace(/\D/g, "");
   if (digits.length === 11 && digits.startsWith("8")) return `7${digits.slice(1)}`;
@@ -50,7 +36,6 @@ function phoneDigits(phone: string): string | null {
   return digits.length >= 11 ? digits : null;
 }
 
-/** Вытаскивает ник Telegram из произвольной строки, которую ввёл клиент. */
 function telegramUsername(messenger: string): string | null {
   const trimmed = messenger.trim();
   const match =
@@ -79,7 +64,6 @@ export function buildLeadCard(
     `${escapeHtml(clientTypeLabels[data.clientType])}`,
     "",
     `<b>${escapeHtml(data.name)}</b>`,
-    // Телефон без разметки: Telegram сам делает его нажимаемым для звонка.
     escapeHtml(data.phone),
   ];
 
@@ -101,10 +85,6 @@ export function buildLeadCard(
     `<i>Согласие на обработку ПД получено, редакция ${escapeHtml(POLICY_VERSION)}</i>`,
   );
 
-  /**
-   * Кнопки Telegram принимают только http(s) и tg://, поэтому tel: и mailto:
-   * сюда не годятся — звонок и почта работают нажатием на текст выше.
-   */
   const buttons: InlineButton[] = [];
   if (nick) {
     buttons.push({ text: "Написать в Telegram", url: `https://t.me/${nick}` });

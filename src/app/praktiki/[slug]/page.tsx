@@ -14,7 +14,6 @@ type PageProps = {
   params: Promise<{ slug: string }>;
 };
 
-/** Все практики известны на сборке — страницы статические (§14, §15). */
 export function generateStaticParams() {
   return practices.map((item) => ({ slug: item.slug }));
 }

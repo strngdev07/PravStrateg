@@ -1,10 +1,6 @@
 import Link from "next/link";
 import type { ReactNode } from "react";
 
-/**
- * Карточка практики — типографическая, без фотографий.
- * CLAUDE.md §2 прямо запрещает стоковые фото и дешёвые юридические иконки.
- */
 type PracticeCardProps = {
   href: string;
   title: string;

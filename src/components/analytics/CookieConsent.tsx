@@ -5,23 +5,17 @@ import Script from "next/script";
 import { useCallback, useSyncExternalStore } from "react";
 
 /**
- * Баннер согласия на cookie и подключение Яндекс.Метрики.
+ * Яндекс.Метрика загружается только после согласия в баннере: пункт 9.2.2
+ * политики называет это согласие правовым основанием обработки аналитических
+ * cookie. До согласия на mc.yandex.ru не уходит ни одного запроса —
+ * счётчик не выносить в layout напрямую.
  *
- * Пункт 9.2.2 политики называет согласие в cookie-баннере правовым основанием
- * обработки аналитических cookie. Поэтому счётчик не загружается до тех пор,
- * пока пользователь явно не согласился: до этого момента на mc.yandex.ru
- * не уходит ни одного запроса.
- *
- * Решение хранится в localStorage на устройстве пользователя и на сервер
- * не передаётся. Читаем его через useSyncExternalStore: на сервере снимок
- * равен "unknown", поэтому баннер не попадает в разметку и не мигает
- * у тех, кто уже сделал выбор.
+ * Решение читается через useSyncExternalStore: на сервере снимок «unknown»,
+ * поэтому баннер не мигает у тех, кто уже сделал выбор.
  */
-
 const STORAGE_KEY = "pravstrateg:cookie-consent";
 const ACCEPTED = "accepted";
 const DECLINED = "declined";
-/** Выбор ещё не прочитан — состояние до гидратации. */
 const UNKNOWN = "unknown";
 
 type Decision = typeof ACCEPTED | typeof DECLINED | null;
@@ -31,7 +25,6 @@ const listeners = new Set<() => void>();
 
 function subscribe(onChange: () => void) {
   listeners.add(onChange);
-  // Синхронизация между вкладками.
   window.addEventListener("storage", onChange);
   return () => {
     listeners.delete(onChange);
@@ -44,7 +37,6 @@ function getSnapshot(): Snapshot {
     const value = window.localStorage.getItem(STORAGE_KEY);
     return value === ACCEPTED || value === DECLINED ? value : null;
   } catch {
-    // Приватный режим или запрет хранения — считаем, что выбор не сделан.
     return null;
   }
 }
@@ -57,7 +49,6 @@ function persist(decision: Exclude<Decision, null>) {
   try {
     window.localStorage.setItem(STORAGE_KEY, decision);
   } catch {
-    // Не смогли запомнить — баннер покажется снова. Это допустимо.
   }
   for (const listener of listeners) listener();
 }

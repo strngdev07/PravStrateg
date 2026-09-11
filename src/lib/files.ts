@@ -1,14 +1,10 @@
 import { FILE_LIMITS } from "@/lib/validation/lead";
 
 /**
- * Безопасная обработка вложений — CLAUDE.md §17.
- *
- * Файлы не сохраняются на диск: они уходят документами в Telegram и живут
- * только в памяти запроса. Это снимает целый класс рисков (перезапись,
- * выполнение, обход webroot) и уменьшает объём хранимых персональных данных.
+ * Вложения живут только в памяти запроса и уходят документами в Telegram.
+ * На диск не пишутся: это снимает риски перезаписи, выполнения и обхода
+ * webroot и уменьшает объём хранимых персональных данных.
  */
-
-/** Сигнатуры разрешённых форматов: расширению из имени файла не доверяем. */
 const SIGNATURES: ReadonlyArray<{
   mime: string;
   bytes: readonly number[];
@@ -17,12 +13,10 @@ const SIGNATURES: ReadonlyArray<{
   { mime: "application/pdf", bytes: [0x25, 0x50, 0x44, 0x46] },
   { mime: "image/jpeg", bytes: [0xff, 0xd8, 0xff] },
   { mime: "image/png", bytes: [0x89, 0x50, 0x4e, 0x47, 0x0d, 0x0a, 0x1a, 0x0a] },
-  // DOCX — это zip-контейнер
   {
     mime: "application/vnd.openxmlformats-officedocument.wordprocessingml.document",
     bytes: [0x50, 0x4b, 0x03, 0x04],
   },
-  // Устаревший DOC — составной документ OLE2
   {
     mime: "application/msword",
     bytes: [0xd0, 0xcf, 0x11, 0xe0, 0xa1, 0xb1, 0x1a, 0xe1],
@@ -42,11 +36,9 @@ function matchesSignature(buffer: Buffer): string | null {
   return null;
 }
 
-/** Убирает пути и опасные символы из имени файла. */
 function safeFilename(original: string): string {
   const base = original.split(/[\\/]/).pop() ?? "file";
   const cleaned = base
-    // управляющие символы и знаки, опасные в путях и заголовках письма
     .replace(/[\x00-\x1f<>:"|?*\\/]/g, "")
     .replace(/\s+/g, " ")
     .trim();
@@ -106,7 +98,6 @@ export async function prepareAttachments(
     prepared.push({
       filename: safeFilename(file.name),
       content: buffer,
-      // Тип берём из сигнатуры, а не из заголовка запроса.
       contentType: detected,
       size: buffer.length,
     });

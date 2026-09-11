@@ -15,7 +15,6 @@ export function MobileMenu({ items }: MobileMenuProps) {
   const pathname = usePathname();
   const panelRef = useRef<HTMLDivElement>(null);
 
-  // Escape закрывает меню, фон не скроллится, фокус уходит в панель — §16.
   useEffect(() => {
     if (!open) return;
 

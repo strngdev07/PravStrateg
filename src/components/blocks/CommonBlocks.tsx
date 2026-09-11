@@ -15,7 +15,6 @@ import {
 } from "@/content/company";
 import { contacts, site } from "@/content/site";
 
-/** Два входа для разной аудитории — сразу под первым экраном. */
 export function AudienceSplit() {
   return (
     <Section tone="default" divider>
@@ -45,7 +44,6 @@ export function AudienceSplit() {
   );
 }
 
-/** Сетка практик. limit — сколько показать (на главной меньше, чем в хабе). */
 export function PracticesGrid({ limit }: { limit?: number }) {
   const items = typeof limit === "number" ? practices.slice(0, limit) : practices;
 
@@ -80,7 +78,6 @@ export function PracticesGrid({ limit }: { limit?: number }) {
   );
 }
 
-/** Короткий блок «О компании» вместе с принципами работы. */
 export function AboutShort() {
   return (
     <Section tone="default" divider>
@@ -113,7 +110,6 @@ export function AboutShort() {
   );
 }
 
-/** Форматы юридической помощи. Цены не указываем — стоимость индивидуальна. */
 export function Formats() {
   return (
     <Section tone="soft">
@@ -143,7 +139,6 @@ export function Formats() {
   );
 }
 
-/** Этапы работы — снимает тревогу «что будет после обращения». */
 export function WorkStages() {
   return (
     <Section tone="default" divider>
@@ -166,7 +161,6 @@ export function WorkStages() {
   );
 }
 
-/** Блок руководителя. */
 export function LeaderBlock() {
   return (
     <Section tone="soft">
@@ -198,7 +192,6 @@ export function LeaderBlock() {
   );
 }
 
-/** Финальный призыв вместе с контактами — один блок вместо двух. */
 export function FinalCta() {
   return (
     <Section tone="deep">

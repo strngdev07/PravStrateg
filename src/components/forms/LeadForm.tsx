@@ -31,19 +31,11 @@ export function LeadForm() {
   const [fileNote, setFileNote] = useState<string | null>(null);
   const formRef = useRef<HTMLFormElement>(null);
 
-  /**
-   * Момент отрисовки формы. Записываем в эффекте, а не в инициализаторе ref:
-   * во время рендера обращаться к текущему времени нельзя.
-   */
   const renderedAt = useRef<number | null>(null);
   useEffect(() => {
     renderedAt.current = Date.now();
   }, []);
 
-  /**
-   * Цель обращения приходит ссылкой вида /kontakty?cel=dokumenty.
-   * Значение из адреса — начальное, выбор пользователя его перекрывает.
-   */
   const searchParams = useSearchParams();
   const fromUrl = searchParams.get("cel");
   const [chosenPurpose, setChosenPurpose] = useState<Purpose | null>(null);
@@ -148,7 +140,6 @@ export function LeadForm() {
       className="border border-line bg-bg p-6 sm:p-8"
     >
       <fieldset disabled={status === "sending"} className="contents">
-        {/* Ловушка для ботов: поле скрыто от людей и не должно заполняться. */}
         <div aria-hidden="true" className="absolute h-0 w-0 overflow-hidden">
           <label htmlFor="website">Не заполняйте это поле</label>
           <input

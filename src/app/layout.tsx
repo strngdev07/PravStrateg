@@ -7,11 +7,6 @@ import { JsonLd, legalServiceSchema, personSchema } from "@/lib/schema-org";
 import { SITE_URL, site } from "@/content/site";
 import "@/styles/globals.css";
 
-/**
- * Шрифты скачиваются на этапе сборки и раздаются с нашего домена —
- * запросов к внешним сервисам во время работы сайта нет (§18),
- * display: swap убирает скачок текста (§15).
- */
 const manrope = Manrope({
   subsets: ["cyrillic", "latin"],
   weight: ["400", "500", "600", "700"],

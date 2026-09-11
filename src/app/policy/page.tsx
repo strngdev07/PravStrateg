@@ -4,11 +4,6 @@ import { JsonLd, breadcrumbSchema } from "@/lib/schema-org";
 import { pageMetadata } from "@/lib/seo";
 import { POLICY_TITLE, policyBlocks } from "@/content/legal/policy";
 
-/**
- * Адрес страницы закреплён пунктом 12.4 самой политики:
- * «Актуальный текст Политики размещен по адресу: https://pravstrateg.ru/policy/».
- * Менять маршрут нельзя — документ ссылается на него.
- */
 export const metadata: Metadata = pageMetadata({
   title: POLICY_TITLE,
   description:

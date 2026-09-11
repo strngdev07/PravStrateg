@@ -1,7 +1,15 @@
 import Link from "next/link";
 import { Container } from "@/components/ui/Container";
 import { MessengerLinks } from "@/components/ui/MessengerLinks";
-import { contacts, legalNav, mainNav, requisites, site } from "@/content/site";
+import { PaymentSystems } from "@/components/blocks/PaymentSystems";
+import {
+  contacts,
+  legalNav,
+  mainNav,
+  paymentNav,
+  requisites,
+  site,
+} from "@/content/site";
 
 export function Footer() {
   const year = new Date().getFullYear();
@@ -58,24 +66,45 @@ export function Footer() {
         </div>
 
         <div className="hairline py-8">
-          <ul className="flex flex-col gap-2.5 sm:flex-row sm:flex-wrap sm:gap-x-7">
-            {legalNav.map((item) => (
-              <li key={item.href}>
-                <Link
-                  href={item.href}
-                  className="text-sm text-ink-soft transition-colors hover:text-accent"
-                >
-                  {item.label}
-                </Link>
-              </li>
-            ))}
-          </ul>
+          <div className="grid gap-6 md:grid-cols-2 md:gap-10">
+            <ul className="flex flex-col gap-2.5">
+              {paymentNav.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="text-sm text-ink-soft transition-colors hover:text-accent"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+
+            <ul className="flex flex-col gap-2.5">
+              {legalNav.map((item) => (
+                <li key={item.href}>
+                  <Link
+                    href={item.href}
+                    className="text-sm text-ink-soft transition-colors hover:text-accent"
+                  >
+                    {item.label}
+                  </Link>
+                </li>
+              ))}
+            </ul>
+          </div>
+
+          <PaymentSystems
+            className="mt-8"
+            caption="Оплата картой проходит через Банк ВТБ (ПАО)"
+          />
 
           <div className="mt-7 space-y-2 text-xs leading-relaxed text-ink-muted">
             <p>
               {requisites.legalName} · ИНН {requisites.inn} · ОГРНИП{" "}
               {requisites.ogrnip}
             </p>
+            <p>{requisites.address}</p>
             <p>
               Информация на сайте носит справочный характер, не является
               публичной офертой и не заменяет юридическую консультацию по

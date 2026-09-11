@@ -3,13 +3,11 @@ import type { NextConfig } from "next";
 const isDev = process.env.NODE_ENV === "development";
 
 /**
- * Источники скриптов. Своя статика плюс Яндекс.Метрика — она грузится
- * только после согласия в cookie-баннере (политика ПД, п. 9.2).
- *
- * 'unsafe-eval' добавляется ТОЛЬКО в режиме разработки: React использует
- * eval() для отладки (восстановление стека вызовов, обновление без
- * перезагрузки). В production React eval() не применяет, и разрешать его
- * там нельзя — это снимает существенную часть защиты от XSS.
+ * 'unsafe-eval' разрешается ТОЛЬКО в разработке: React использует eval()
+ * для отладки, в production — никогда. На боевую сборку это послабление
+ * переносить нельзя, оно снимает существенную часть защиты от XSS.
+ * По той же причине HSTS и upgrade-insecure-requests включаются только
+ * в production: на localhost они мешают разработке.
  */
 const scriptSrc = [
   "'self'",
@@ -19,9 +17,6 @@ const scriptSrc = [
   "https://yastatic.net",
 ].join(" ");
 
-/**
- * Security headers — CLAUDE.md §17.
- */
 const securityHeaders = [
   { key: "X-Content-Type-Options", value: "nosniff" },
   { key: "X-Frame-Options", value: "SAMEORIGIN" },
@@ -31,8 +26,6 @@ const securityHeaders = [
     key: "Permissions-Policy",
     value: "camera=(), microphone=(), geolocation=(), payment=()",
   },
-  // Только для боевого сайта: на localhost принуждение к HTTPS
-  // ломает локальную разработку и ничего не защищает.
   ...(isDev
     ? []
     : [
@@ -63,6 +56,9 @@ const securityHeaders = [
 const nextConfig: NextConfig = {
   reactStrictMode: true,
   poweredByHeader: false,
+  // Самодостаточная сборка: в образ попадают только нужные файлы
+  // вместо всего node_modules. Нужна для Docker.
+  output: "standalone",
   images: {
     formats: ["image/avif", "image/webp"],
   },

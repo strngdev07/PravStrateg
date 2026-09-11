@@ -3,10 +3,8 @@ import { Container } from "./Container";
 
 type SectionProps = {
   children: ReactNode;
-  /** Фон секции: чередование задаёт спокойный ритм страницы. */
   tone?: "default" | "soft" | "muted" | "deep";
   width?: "default" | "narrow" | "wide";
-  /** Тонкая линия сверху — вместо тяжёлых блоков-разделителей. */
   divider?: boolean;
   id?: string;
   className?: string;
@@ -41,7 +39,6 @@ type SectionHeadingProps = {
   eyebrow?: string;
   title: string;
   lead?: string;
-  /** Заголовок секции — h2 по умолчанию, чтобы не спорить с h1 страницы. */
   as?: "h1" | "h2" | "h3";
   align?: "left" | "center";
 };

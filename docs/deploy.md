@@ -1,59 +1,63 @@
 # Развёртывание сайта
 
-Требование к площадке: сервер в России. Это не предпочтение, а следствие п. 10.4
-политики обработки ПД («Оператор обеспечивает локализацию персональных данных на
-территории Российской Федерации») и §18 CLAUDE.md. Vercel, Netlify, Supabase и
-подобные площадки по этой причине не подходят.
+Сайт упакован в Docker и работает за Caddy, который сам получает и продлевает
+сертификат Let's Encrypt. Отдельный certbot, systemd-юниты и конфигурация nginx
+не нужны — переезд на другой сервер сводится к копированию трёх файлов.
 
-## Выбор хостинга
+Требование к площадке: сервер в России. Это следствие п. 10.4 политики обработки
+персональных данных и §18 CLAUDE.md. Дополнительно Банк ВТБ требует статический
+IP-адрес и платный хостинг — VPS закрывает оба пункта.
 
-| Провайдер | Ориентир по цене | Комментарий |
+## Выбор сервера
+
+| Провайдер | Конфигурация | Цена |
 |---|---|---|
-| **Timeweb Cloud** | ~900–1500 ₽/мес | Рекомендуется: быстро разворачивается, простая панель, оплата картой РФ |
-| Beget | от ~600 ₽/мес | Дешевле, панель проще, ресурсов меньше |
-| Selectel | от ~1200 ₽/мес | Надёжнее и дороже, разумно при росте нагрузки |
+| **Timeweb Cloud** | 2 vCPU / 4 ГБ / 50 ГБ NVMe | ~1000 ₽/мес |
+| Beget | сопоставимо | от ~600 ₽/мес |
+| Selectel | сопоставимо | от ~1200 ₽/мес |
 
-Конфигурация под этот сайт: **2 vCPU, 2–4 ГБ RAM, 30–40 ГБ NVMe, Ubuntu 24.04**.
-База данных не нужна — заявки не хранятся на сервере.
+Рекомендуется Timeweb Cloud. Ubuntu 24.04 LTS, **регион обязательно в России** —
+у провайдера есть площадки в Нидерландах, Германии и Казахстане, они не подходят.
+
+Почему 4 ГБ, хотя работающему сайту хватает одного: память нужна на сборку
+образа, Next.js расходует на это полтора-два гигабайта.
+
+Аккаунт заводить **на ИП**, а не на физическое лицо: оплата пойдёт с расчётного
+счёта, закрывающие документы будут на «ИП Новиков И. В.». Это и для бухгалтерии
+правильно, и подтверждает банку, что хостинг платный.
 
 ## Порядок
 
 ### 1. Домен
 
-Регистратор — **reg.ru**. Домен зарегистрирован 03.09.2026, оплачен до 03.09.2027.
-DNS уже обслуживается серверами `ns1.hosting.reg.ru` и `ns2.hosting.reg.ru`, поэтому
-менять NS-серверы не нужно — достаточно отредактировать зону в панели reg.ru.
+Регистратор — **reg.ru**. DNS обслуживается серверами `ns1.hosting.reg.ru`
+и `ns2.hosting.reg.ru`, менять их не нужно.
 
-**Путь в панели:** Личный кабинет → «Домены» → `pravstrateg.ru` → «Управление зоной»
-(раздел может называться «DNS-серверы и управление зоной»).
-
-Добавить две записи, подставив IP сервера:
+Личный кабинет → «Домены» → `pravstrateg.ru` → «Управление зоной». Добавить:
 
 ```
 @      A     <IP сервера>
 www    A     <IP сервера>
 ```
 
-Если в зоне уже есть A-записи `@` и `www`, ведущие на парковку или хостинг reg.ru —
-отредактировать их, а не добавлять вторые: две A-записи на одно имя будут отдавать
-посетителей то на один адрес, то на другой.
+Если A-записи `@` и `www` уже есть и ведут на парковку — **отредактировать их**,
+а не добавлять вторые: две записи на одно имя будут раскидывать посетителей
+по разным адресам.
 
-Обновление DNS занимает от нескольких минут до нескольких часов. Проверить,
-куда сейчас указывает домен:
+Проверить, что применилось:
 
 ```bash
 dig +short pravstrateg.ru
 dig +short www.pravstrateg.ru
 ```
 
-Сертификат выпускать (шаг 6) только после того, как обе команды вернут IP сервера,
-иначе Let's Encrypt не сможет подтвердить владение доменом.
+Обе команды должны вернуть IP сервера. Запускать Caddy раньше этого момента
+бессмысленно: Let's Encrypt не сможет подтвердить владение доменом.
 
 > **Статус домена `UNVERIFIED`.** Регистратор ещё не подтвердил данные владельца.
-> Для доменов `.ru` это обязательная процедура: reg.ru запрашивает подтверждение
-> письмом. Пока данные не подтверждены, делегирование домена могут снять — тогда
-> сайт перестанет открываться независимо от того, как настроен сервер.
-> Проверить статус: `whois pravstrateg.ru`, поле `state`.
+> Для доменов `.ru` это обязательная процедура. Пока данные не подтверждены,
+> делегирование могут снять — сайт перестанет открываться независимо от того,
+> как настроен сервер. Проверить: `whois pravstrateg.ru`, поле `state`.
 
 ### 2. Подготовка сервера
 
@@ -62,142 +66,95 @@ ssh root@<IP>
 
 adduser deploy && usermod -aG sudo deploy
 apt update && apt upgrade -y
-apt install -y nginx git curl ufw
+apt install -y git ufw
 
-ufw allow OpenSSH && ufw allow 'Nginx Full' && ufw enable
+ufw allow OpenSSH && ufw allow 80 && ufw allow 443 && ufw enable
 
-# Node.js 22 LTS
-curl -fsSL https://deb.nodesource.com/setup_22.x | bash -
-apt install -y nodejs
+# Docker
+curl -fsSL https://get.docker.com | sh
+usermod -aG docker deploy
 ```
 
-### 3. Код и сборка
+### 3. Код и переменные окружения
 
 ```bash
 su - deploy
-git clone <репозиторий> ~/pravstrateg
+git clone git@github.com:<аккаунт>/pravstrateg.git ~/pravstrateg
 cd ~/pravstrateg
 
 cp .env.example .env
-nano .env                 # заполнить токен бота, получателей, Метрику
-
-npm ci
-npm run build
+nano .env      # токен бота, получатели, номер счётчика Метрики
 ```
 
-### 4. Автозапуск через systemd
+`.env` в репозиторий не попадает — на новом сервере его всегда создают заново.
 
-`/etc/systemd/system/pravstrateg.service`:
-
-```ini
-[Unit]
-Description=PravStrateg website
-After=network.target
-
-[Service]
-Type=simple
-User=deploy
-WorkingDirectory=/home/deploy/pravstrateg
-Environment=NODE_ENV=production
-Environment=PORT=3000
-EnvironmentFile=/home/deploy/pravstrateg/.env
-ExecStart=/usr/bin/npm run start
-Restart=always
-RestartSec=5
-
-[Install]
-WantedBy=multi-user.target
-```
+### 4. Запуск
 
 ```bash
-sudo systemctl daemon-reload
-sudo systemctl enable --now pravstrateg
-sudo systemctl status pravstrateg
+docker compose up -d --build
+docker compose ps
+docker compose logs -f caddy    # видно выпуск сертификата
 ```
 
-### 5. Nginx
+Первый запуск занимает несколько минут: собирается образ и выпускается
+сертификат. Дальнейшие перезапуски — секунды.
 
-`/etc/nginx/sites-available/pravstrateg`:
-
-```nginx
-# www → основной домен. Canonical на страницах указывает на адрес без www,
-# поэтому обслуживать сайт на обоих именах нельзя: получится дублирование
-# для поисковиков и расхождение в статистике Метрики.
-server {
-    listen 80;
-    server_name www.pravstrateg.ru;
-    return 301 https://pravstrateg.ru$request_uri;
-}
-
-server {
-    listen 80;
-    server_name pravstrateg.ru;
-
-    # Заявки с вложениями — до 10 МБ плюс запас на служебные поля
-    client_max_body_size 12M;
-
-    location / {
-        proxy_pass http://127.0.0.1:3000;
-        proxy_http_version 1.1;
-        proxy_set_header Host $host;
-        proxy_set_header X-Real-IP $remote_addr;
-        proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
-        proxy_set_header X-Forwarded-Proto $scheme;
-        proxy_set_header Upgrade $http_upgrade;
-        proxy_set_header Connection "upgrade";
-    }
-}
-```
-
-`X-Forwarded-For` обязателен: по нему работает ограничение частоты обращений
-и фиксируется IP в следе согласия на обработку ПД.
+### 5. Проверка
 
 ```bash
-sudo ln -s /etc/nginx/sites-available/pravstrateg /etc/nginx/sites-enabled/
-sudo rm -f /etc/nginx/sites-enabled/default
-sudo nginx -t && sudo systemctl reload nginx
-```
-
-### 6. HTTPS
-
-```bash
-sudo apt install -y certbot python3-certbot-nginx
-sudo certbot --nginx -d pravstrateg.ru -d www.pravstrateg.ru
-```
-
-Certbot сам добавит редирект с HTTP на HTTPS и настроит автопродление.
-
-Заголовок `Strict-Transport-Security` отдаёт приложение — до выпуска сертификата
-сайт по HTTP открывать не нужно, иначе браузер запомнит требование HTTPS.
-
-### 7. Проверка после запуска
-
-```bash
-curl -sI https://pravstrateg.ru | grep -iE "content-security|strict-transport|x-frame"
+curl -sI https://pravstrateg.ru | grep -iE "content-security|strict-transport"
 curl -s https://pravstrateg.ru/robots.txt
-curl -s https://pravstrateg.ru/sitemap.xml | head
+curl -sI https://www.pravstrateg.ru | grep -i location   # должен быть редирект
 ```
 
 - отправить тестовую заявку с файлом — карточка и документ должны прийти
   в Telegram всем получателям из `TELEGRAM_CHAT_ID`;
-- открыть сайт в приватном окне: до нажатия «Принять» в панели Network не должно
-  быть запросов к `mc.yandex.ru`;
-- проверить, что `/policy` открывается ровно по адресу из п. 12.4 политики.
+- открыть сайт в приватном окне: до нажатия «Принять» в панели Network
+  не должно быть запросов к `mc.yandex.ru`;
+- проверить, что `/policy` открывается по адресу из п. 12.4 политики.
 
-### 8. Обновление сайта
+## Обновление сайта
 
 ```bash
 cd ~/pravstrateg
 git pull
-npm ci
-npm run build
-sudo systemctl restart pravstrateg
+docker compose up -d --build
 ```
+
+Старый контейнер останавливается только после того, как собран новый образ.
+
+## Переезд на другой сервер
+
+Ради этого и выбран Docker. На новой машине:
+
+1. Выполнить шаг 2 (подготовка сервера).
+2. Склонировать репозиторий, создать `.env` — можно перенести со старого сервера.
+3. `docker compose up -d --build`.
+4. Переключить A-записи в reg.ru на новый IP.
+
+Сертификат Caddy выпустит заново автоматически. Старый сервер можно гасить
+после того, как DNS разойдётся — обычно в течение часа.
+
+Ничего, кроме `.env`, переносить не нужно: сайт не хранит состояние.
+Заявки уходят в Telegram, база данных отсутствует.
 
 ## Что настроить после запуска
 
 - Яндекс.Вебмастер: подтвердить права, отправить sitemap
-- Яндекс.Метрика: создать счётчик, вписать номер в `.env`, задать цели
+- Яндекс.Метрика: проверить установку счётчика, задать цели
   (отправка формы, клик по телефону)
-- Резервное копирование конфигурации и `.env` (в репозиторий `.env` не попадает)
+- Резервная копия `.env` в надёжном месте — в репозитории его нет
 - Мониторинг доступности
+
+## Если что-то пошло не так
+
+```bash
+docker compose logs app        # ошибки приложения
+docker compose logs caddy      # проблемы с сертификатом
+docker compose restart         # перезапуск без пересборки
+docker compose down && docker compose up -d --build   # полная пересборка
+```
+
+Сертификат не выпускается — почти всегда причина в DNS: `dig +short pravstrateg.ru`
+должен возвращать IP этого сервера, а порты 80 и 443 должны быть открыты
+в `ufw` и в панели провайдера.

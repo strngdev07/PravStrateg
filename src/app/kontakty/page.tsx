@@ -73,7 +73,6 @@ export default function ContactsPage() {
 
           <div className="lg:col-span-8">
             <div id="zayavka" className="scroll-mt-24">
-              {/* Форма читает цель обращения из адреса (?cel=...) — нужна граница Suspense. */}
               <Suspense
                 fallback={
                   <div className="border border-line bg-bg p-6 sm:p-8">

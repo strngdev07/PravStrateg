@@ -7,7 +7,6 @@ type LegalPageProps = {
   children: ReactNode;
 };
 
-/** Общая оболочка для правовых страниц: узкая колонка, спокойная типографика. */
 export function LegalPage({ title, updatedAt, children }: LegalPageProps) {
   return (
     <>
