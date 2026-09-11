@@ -3,6 +3,7 @@
 import Link from "next/link";
 import Script from "next/script";
 import { useCallback, useSyncExternalStore } from "react";
+import { metrikaCounterId } from "@/lib/analytics";
 
 /**
  * Яндекс.Метрика загружается только после согласия в баннере: пункт 9.2.2
@@ -64,12 +65,12 @@ export function CookieConsent() {
     persist(value);
   }, []);
 
-  const metrikaId = process.env.NEXT_PUBLIC_YANDEX_METRIKA_ID;
+  const counterId = metrikaCounterId();
   const analyticsAllowed = decision === ACCEPTED;
 
   return (
     <>
-      {analyticsAllowed && metrikaId ? (
+      {analyticsAllowed && counterId ? (
         <Script id="yandex-metrika" strategy="afterInteractive">
           {`
             (function(m,e,t,r,i,k,a){m[i]=m[i]||function(){(m[i].a=m[i].a||[]).push(arguments)};
@@ -77,7 +78,7 @@ export function CookieConsent() {
             for (var j = 0; j < document.scripts.length; j++) {if (document.scripts[j].src === r) { return; }}
             k=e.createElement(t),a=e.getElementsByTagName(t)[0],k.async=1,k.src=r,a.parentNode.insertBefore(k,a)})
             (window, document, "script", "https://mc.yandex.ru/metrika/tag.js", "ym");
-            ym(${JSON.stringify(metrikaId)}, "init", {
+            ym(${counterId}, "init", {
               clickmap: true,
               trackLinks: true,
               accurateTrackBounce: true,

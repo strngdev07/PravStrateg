@@ -12,6 +12,7 @@ import {
   type Purpose,
 } from "@/lib/validation/lead";
 import { contacts } from "@/content/site";
+import { reachGoal } from "@/lib/analytics";
 
 type Status = "idle" | "sending" | "sent" | "error";
 
@@ -91,6 +92,8 @@ export function LeadForm() {
         setStatus("error");
         return;
       }
+
+      reachGoal("lead", { purpose });
 
       formRef.current?.reset();
       setFileNote(null);
