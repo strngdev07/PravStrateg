@@ -79,6 +79,7 @@ Schema.org подхватят её автоматически — верстку
 
 ## Документы
 
+- [docs/podklyuchenie-servisov.md](./docs/podklyuchenie-servisov.md) — пошагово: почта, Telegram, Метрика
 - [docs/uvedomlenie-roskomnadzor.md](./docs/uvedomlenie-roskomnadzor.md) — как подать уведомление оператора ПД
 - [docs/oferta-draft.md](./docs/oferta-draft.md) — черновик оферты, требует юридической вычитки
 - [docs/deploy.md](./docs/deploy.md) — развёртывание на сервере
