@@ -97,7 +97,7 @@ export default function PaymentPage() {
                         </p>
                       ) : null}
                     </div>
-                    <dd className="font-medium whitespace-nowrap text-accent">
+                    <dd className="font-medium text-accent sm:whitespace-nowrap">
                       {row.price}
                     </dd>
                   </div>
@@ -205,7 +205,7 @@ export default function PaymentPage() {
       </Section>
 
       <Section tone="soft" id="rekvizity">
-        <h2 className="text-2xl sm:text-3xl">Реквизиты для перевода</h2>
+        <h2 className="text-2xl sm:text-3xl">Реквизиты для оплаты</h2>
         <p className="mt-4 max-w-2xl leading-relaxed text-ink-soft">
           В назначении платежа указывайте номер счёта или договора — так платёж
           будет верно учтён.

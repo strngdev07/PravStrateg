@@ -53,7 +53,7 @@ export default function AboutPage() {
         <SectionHeading
           eyebrow="Подход"
           title={aboutCopy.principlesTitle}
-          lead="Четыре принципа, по которым мы ведём дела. Они определяют, за что мы беремся и что говорим клиенту в самом начале."
+          lead="Четыре принципа, по которым мы ведём дела. Они определяют, за что мы берёмся и что говорим клиенту в самом начале."
         />
         <ul className="grid gap-px bg-line sm:grid-cols-2">
           {approach.map((item) => (

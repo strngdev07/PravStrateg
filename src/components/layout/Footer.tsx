@@ -23,7 +23,7 @@ export function Footer() {
               ПравСтратег
             </p>
             <p className="mt-2 text-sm text-ink-muted">
-              Юридическая компания под руководством {site.leader.name}
+              Юридическая компания под руководством {site.leader.nameGenitive}
             </p>
             <p className="mt-4 max-w-xs text-sm leading-relaxed text-ink-soft">
               {site.geo}
@@ -32,12 +32,12 @@ export function Footer() {
 
           <nav className="md:col-span-3" aria-label="Разделы сайта">
             <p className="eyebrow mb-4">Разделы</p>
-            <ul className="flex flex-col gap-2.5">
+            <ul className="flex flex-col">
               {mainNav.map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="text-sm text-ink-soft transition-colors hover:text-accent"
+                    className="-mx-1 block px-1 py-3 text-sm text-ink-soft transition-colors hover:text-accent"
                   >
                     {item.label}
                   </Link>
@@ -50,13 +50,13 @@ export function Footer() {
             <p className="eyebrow mb-4">Контакты</p>
             <a
               href={contacts.phone.href}
-              className="block text-lg font-medium text-ink transition-colors hover:text-accent"
+              className="-mx-1 block px-1 py-2.5 text-lg font-medium text-ink transition-colors hover:text-accent"
             >
               {contacts.phone.display}
             </a>
             <a
               href={contacts.email.href}
-              className="mt-2 block text-sm text-ink-soft transition-colors hover:text-accent"
+              className="-mx-1 block px-1 py-2.5 text-sm text-ink-soft transition-colors hover:text-accent"
             >
               {contacts.email.display}
             </a>
@@ -67,12 +67,12 @@ export function Footer() {
 
         <div className="hairline py-8">
           <div className="grid gap-6 md:grid-cols-2 md:gap-10">
-            <ul className="flex flex-col gap-2.5">
+            <ul className="flex flex-col">
               {paymentNav.map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="text-sm text-ink-soft transition-colors hover:text-accent"
+                    className="-mx-1 block px-1 py-3 text-sm text-ink-soft transition-colors hover:text-accent"
                   >
                     {item.label}
                   </Link>
@@ -80,12 +80,12 @@ export function Footer() {
               ))}
             </ul>
 
-            <ul className="flex flex-col gap-2.5">
+            <ul className="flex flex-col">
               {legalNav.map((item) => (
                 <li key={item.href}>
                   <Link
                     href={item.href}
-                    className="text-sm text-ink-soft transition-colors hover:text-accent"
+                    className="-mx-1 block px-1 py-3 text-sm text-ink-soft transition-colors hover:text-accent"
                   >
                     {item.label}
                   </Link>

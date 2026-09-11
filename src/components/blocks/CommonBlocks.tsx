@@ -222,13 +222,13 @@ export function FinalCta() {
           <p className="eyebrow mb-4 text-white/45">Связаться напрямую</p>
           <a
             href={contacts.phone.href}
-            className="block text-2xl font-medium text-ink-invert transition-opacity hover:opacity-80"
+            className="-mx-1 block px-1 py-2 text-2xl font-medium text-ink-invert transition-opacity hover:opacity-80"
           >
             {contacts.phone.display}
           </a>
           <a
             href={contacts.email.href}
-            className="mt-3 block text-white/70 transition-opacity hover:opacity-80"
+            className="-mx-1 mt-1 block px-1 py-2.5 text-white/70 transition-opacity hover:opacity-80"
           >
             {contacts.email.display}
           </a>

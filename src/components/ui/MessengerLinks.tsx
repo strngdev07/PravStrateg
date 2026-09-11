@@ -11,8 +11,8 @@ export function MessengerLinks({
 }: MessengerLinksProps) {
   const linkClass =
     tone === "invert"
-      ? "text-sm text-white/80 underline underline-offset-4 hover:text-ink-invert"
-      : "text-sm text-accent underline-offset-4 hover:underline";
+      ? "-mx-1 block px-1 py-2.5 text-sm text-white/80 underline underline-offset-4 hover:text-ink-invert"
+      : "-mx-1 block px-1 py-2.5 text-sm text-accent underline-offset-4 hover:underline";
 
   const noteClass =
     tone === "invert" ? "text-sm text-white/50" : "text-sm text-ink-muted";

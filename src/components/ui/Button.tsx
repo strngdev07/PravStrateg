@@ -22,7 +22,7 @@ const sizes: Record<Size, string> = {
 };
 
 function classes(variant: Variant, size: Size, extra: string) {
-  const sizing = variant === "ghost" ? "" : sizes[size];
+  const sizing = variant === "ghost" ? "-mx-1 px-1 py-2.5" : sizes[size];
   return `${base} ${variants[variant]} ${sizing} ${extra}`.trim();
 }
 

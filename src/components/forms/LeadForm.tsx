@@ -235,7 +235,7 @@ export function LeadForm() {
               type="text"
               maxLength={120}
               className={fieldClass}
-              placeholder="Ник или номер"
+              placeholder="@ник в Telegram или номер телефона"
             />
           </div>
 

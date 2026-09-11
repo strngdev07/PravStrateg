@@ -38,9 +38,17 @@ function phoneDigits(phone: string): string | null {
 
 function telegramUsername(messenger: string): string | null {
   const trimmed = messenger.trim();
-  const match =
-    trimmed.match(/(?:t\.me\/|telegram\.me\/|@)([A-Za-z0-9_]{5,32})/) ?? null;
-  return match?.[1] ?? null;
+
+  const explicit = trimmed.match(
+    /(?:t\.me\/|telegram\.me\/|@)([A-Za-z0-9_]{5,32})/,
+  );
+  if (explicit?.[1]) return explicit[1];
+
+  const bare = trimmed.match(/^[A-Za-z][A-Za-z0-9_]{4,31}$/);
+  if (!bare) return null;
+
+  const serviceNames = ["telegram", "whatsapp", "viber", "signal", "skype"];
+  return serviceNames.includes(bare[0].toLowerCase()) ? null : bare[0];
 }
 
 export type LeadCard = {

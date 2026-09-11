@@ -67,7 +67,7 @@ export function MobileMenu({ items }: MobileMenuProps) {
           id="mobile-menu"
           ref={panelRef}
           tabIndex={-1}
-          className="fixed inset-x-0 top-18 bottom-0 z-50 overflow-y-auto border-t border-line bg-bg px-5 py-8"
+          className="fixed inset-x-0 top-18 bottom-0 z-50 overscroll-contain overflow-y-auto border-t border-line bg-bg px-5 py-8"
         >
           <nav aria-label="Основная навигация">
             <ul className="flex flex-col gap-1">

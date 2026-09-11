@@ -6,9 +6,9 @@ import { contacts, mainNav } from "@/content/site";
 
 export function Header() {
   return (
-    <header className="sticky top-0 z-40 border-b border-line bg-bg/95 backdrop-blur-sm">
+    <header className="sticky top-0 z-40 border-b border-line bg-bg">
       <Container width="wide">
-        <div className="flex h-[72px] items-center justify-between gap-6">
+        <div className="flex h-18 items-center justify-between gap-6">
           <Link
             href="/"
             className="flex shrink-0 flex-col leading-none"
