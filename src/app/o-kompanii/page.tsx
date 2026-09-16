@@ -83,11 +83,6 @@ export default function AboutPage() {
                   {paragraph}
                 </p>
               ))}
-              <p className="mb-4 leading-relaxed text-ink-soft">
-                Компания растёт, и со временем в ней появятся другие юристы. Но
-                принцип останется прежним: стратегию по делу определяет тот, кто
-                разобрался в нём лично.
-              </p>
             </div>
           </div>
         </div>

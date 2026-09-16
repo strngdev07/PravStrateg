@@ -99,8 +99,8 @@ export default async function PracticePage({ params }: PageProps) {
               <p className="eyebrow mb-3">С чего начать</p>
               <p className="text-[0.95rem] leading-relaxed text-ink-soft">
                 Опишите ситуацию и приложите документы, которые есть на руках.
-                Мы изучим их и скажем, какие есть варианты и что реально можно
-                получить.
+                Мы ознакомимся с ними и скажем, чем можем помочь и сколько будет
+                стоить работа.
               </p>
               <ButtonLink
                 href="/kontakty?cel=dokumenty#zayavka"
