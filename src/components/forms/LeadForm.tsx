@@ -13,8 +13,16 @@ import {
 } from "@/lib/validation/lead";
 import { contacts } from "@/content/site";
 import { reachGoal } from "@/lib/analytics";
+import {
+  clearFormDraft,
+  readFormDraft,
+  saveFormDraft,
+  type FormDraft,
+} from "@/lib/form-draft";
 
 type Status = "idle" | "sending" | "sent" | "error";
+
+const DRAFT_KEY = "lead";
 
 const fieldClass =
   "w-full border border-line-strong bg-bg px-3.5 py-2.5 text-[0.95rem] text-ink " +
@@ -26,43 +34,95 @@ function isPurpose(value: string | null): value is Purpose {
   return value !== null && (PURPOSES as readonly string[]).includes(value);
 }
 
+function describeFiles(files: File[]): string | null {
+  if (files.length === 0) return null;
+
+  const total = files.reduce((sum, file) => sum + file.size, 0);
+  const mb = (total / (1024 * 1024)).toFixed(1);
+
+  if (files.length > FILE_LIMITS.maxFiles) {
+    return `Выбрано ${files.length} файлов — максимум ${FILE_LIMITS.maxFiles}.`;
+  }
+  if (total > FILE_LIMITS.maxTotalBytes) {
+    return `Выбрано ${mb} МБ — максимум 10 МБ.`;
+  }
+  return `Выбрано файлов: ${files.length} (${mb} МБ)`;
+}
+
+function canRestoreFiles(): boolean {
+  try {
+    return new DataTransfer().items !== undefined;
+  } catch {
+    return false;
+  }
+}
+
+function restoreDraft(): FormDraft | null {
+  const draft = readFormDraft(DRAFT_KEY);
+  if (!draft || draft.files.length === 0 || canRestoreFiles()) return draft;
+  return { ...draft, files: [] };
+}
+
+function restorePurpose(
+  draft: FormDraft | null,
+  fromUrl: string | null,
+): Purpose | null {
+  if (!draft) return null;
+  if (isPurpose(fromUrl) && fromUrl !== draft.purposeFromUrl) return null;
+  const saved = draft.fields.purpose ?? null;
+  return isPurpose(saved) ? saved : null;
+}
+
 export function LeadForm() {
-  const [status, setStatus] = useState<Status>("idle");
-  const [error, setError] = useState<string | null>(null);
-  const [fileNote, setFileNote] = useState<string | null>(null);
-  const formRef = useRef<HTMLFormElement>(null);
-
-  const renderedAt = useRef<number | null>(null);
-  useEffect(() => {
-    renderedAt.current = Date.now();
-  }, []);
-
   const searchParams = useSearchParams();
   const fromUrl = searchParams.get("cel");
-  const [chosenPurpose, setChosenPurpose] = useState<Purpose | null>(null);
+
+  const [draft, setDraft] = useState<FormDraft | null>(restoreDraft);
+  const [status, setStatus] = useState<Status>("idle");
+  const [error, setError] = useState<string | null>(null);
+  const [fileNote, setFileNote] = useState<string | null>(() =>
+    describeFiles(draft?.files ?? []),
+  );
+  const formRef = useRef<HTMLFormElement>(null);
+  const filesRef = useRef<HTMLInputElement>(null);
+
+  const renderedAt = useRef<number | null>(draft?.renderedAt ?? null);
+  useEffect(() => {
+    if (renderedAt.current === null) renderedAt.current = Date.now();
+  }, []);
+
+  useEffect(() => {
+    const input = filesRef.current;
+    if (!input || !draft || draft.files.length === 0) return;
+    const transfer = new DataTransfer();
+    draft.files.forEach((file) => transfer.items.add(file));
+    input.files = transfer.files;
+  }, [draft]);
+
+  const [chosenPurpose, setChosenPurpose] = useState<Purpose | null>(() =>
+    restorePurpose(draft, fromUrl),
+  );
   const purpose: Purpose =
     chosenPurpose ?? (isPurpose(fromUrl) ? fromUrl : "consultation");
 
+  function rememberDraft(form: HTMLFormElement) {
+    const fields: Record<string, string> = {};
+    const files: File[] = [];
+    for (const [name, value] of new FormData(form)) {
+      if (name === "website") continue;
+      if (typeof value === "string") fields[name] = value;
+      else if (value.name !== "") files.push(value);
+    }
+    saveFormDraft(DRAFT_KEY, {
+      fields,
+      files,
+      purposeFromUrl: fromUrl,
+      renderedAt: renderedAt.current,
+    });
+  }
+
   function onFilesChange(event: React.ChangeEvent<HTMLInputElement>) {
-    const files = Array.from(event.target.files ?? []);
-    if (files.length === 0) {
-      setFileNote(null);
-      return;
-    }
-
-    const total = files.reduce((sum, file) => sum + file.size, 0);
-    const mb = (total / (1024 * 1024)).toFixed(1);
-
-    if (files.length > FILE_LIMITS.maxFiles) {
-      setFileNote(`Выбрано ${files.length} файлов — максимум ${FILE_LIMITS.maxFiles}.`);
-      return;
-    }
-    if (total > FILE_LIMITS.maxTotalBytes) {
-      setFileNote(`Выбрано ${mb} МБ — максимум 10 МБ.`);
-      return;
-    }
-
-    setFileNote(`Выбрано файлов: ${files.length} (${mb} МБ)`);
+    setFileNote(describeFiles(Array.from(event.target.files ?? [])));
   }
 
   async function onSubmit(event: FormEvent<HTMLFormElement>) {
@@ -95,6 +155,8 @@ export function LeadForm() {
 
       reachGoal("lead", { purpose });
 
+      clearFormDraft(DRAFT_KEY);
+      setDraft(null);
       formRef.current?.reset();
       setFileNote(null);
       setStatus("sent");
@@ -139,6 +201,7 @@ export function LeadForm() {
     <form
       ref={formRef}
       onSubmit={onSubmit}
+      onChange={(event) => rememberDraft(event.currentTarget)}
       noValidate
       className="border border-line bg-bg p-6 sm:p-8"
     >
@@ -192,6 +255,7 @@ export function LeadForm() {
               required
               autoComplete="name"
               maxLength={120}
+              defaultValue={draft?.fields.name}
               className={fieldClass}
               placeholder="Как к вам обращаться"
             />
@@ -208,6 +272,7 @@ export function LeadForm() {
               required
               autoComplete="tel"
               maxLength={25}
+              defaultValue={draft?.fields.phone}
               className={fieldClass}
               placeholder="+7 900 000 00 00"
             />
@@ -223,6 +288,7 @@ export function LeadForm() {
               type="email"
               autoComplete="email"
               maxLength={180}
+              defaultValue={draft?.fields.email}
               className={fieldClass}
               placeholder="Для ответа письмом"
             />
@@ -237,6 +303,7 @@ export function LeadForm() {
               name="messenger"
               type="text"
               maxLength={120}
+              defaultValue={draft?.fields.messenger}
               className={fieldClass}
               placeholder="@ник в Telegram или номер телефона"
             />
@@ -252,7 +319,7 @@ export function LeadForm() {
                   type="radio"
                   name="clientType"
                   value="person"
-                  defaultChecked
+                  defaultChecked={(draft?.fields.clientType ?? "person") === "person"}
                   className="accent-accent"
                 />
                 Физическое лицо
@@ -262,6 +329,7 @@ export function LeadForm() {
                   type="radio"
                   name="clientType"
                   value="org"
+                  defaultChecked={draft?.fields.clientType === "org"}
                   className="accent-accent"
                 />
                 Организация или ИП
@@ -277,7 +345,7 @@ export function LeadForm() {
               id="category"
               name="category"
               required
-              defaultValue="drugoe"
+              defaultValue={draft?.fields.category ?? "drugoe"}
               className={fieldClass}
             >
               {categoryOptions.map((option) => (
@@ -299,6 +367,7 @@ export function LeadForm() {
               rows={6}
               minLength={20}
               maxLength={5000}
+              defaultValue={draft?.fields.message}
               className={`${fieldClass} resize-y`}
               placeholder="Что произошло, чего вы хотите добиться, какие сроки уже идут. Чем конкретнее — тем точнее будет ответ."
             />
@@ -309,6 +378,7 @@ export function LeadForm() {
               Документы
             </label>
             <input
+              ref={filesRef}
               id="files"
               name="files"
               type="file"
@@ -333,12 +403,15 @@ export function LeadForm() {
                 type="checkbox"
                 name="consent"
                 required
+                defaultChecked={draft?.fields.consent === "on"}
                 className="mt-1 h-4 w-4 shrink-0 accent-accent"
               />
               <span>
                 Я даю{" "}
                 <Link
                   href="/soglasie"
+                  target="_blank"
+                  rel="noopener"
                   className="text-accent underline underline-offset-4"
                 >
                   согласие на обработку персональных данных
@@ -346,6 +419,8 @@ export function LeadForm() {
                 и ознакомлен с{" "}
                 <Link
                   href="/policy"
+                  target="_blank"
+                  rel="noopener"
                   className="text-accent underline underline-offset-4"
                 >
                   политикой их обработки
